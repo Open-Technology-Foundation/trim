@@ -33,15 +33,13 @@
 #@          : trimv -n myvar "  This   is  a messy string.  "
 #@          : echo "$myvar"
 #@          :
-ltrim() {
-	if(($#)); then
-		local v="$*"
-		echo "${v#"${v%%[![:blank:]]*}"}"
-	else
-		local REPLY
-		while IFS= read -r; do
-			echo "${REPLY#"${REPLY%%[![:blank:]]*}"}"
-		done
-	fi
+#don't judge me.
+#shellcheck disable=SC2048,SC2086
+trimall() {
+    # Usage: trimall "   example   string    "
+    set -f
+    set -- $*
+    printf '%s\n' "$*"
+    set +f
 }
-declare -fx ltrim
+declare -fx trimall
