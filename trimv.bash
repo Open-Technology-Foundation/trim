@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #@ Function : trim ltrim rtrim trimv trimall
 #@ Desc     : Delete leading/trailing blank characters from a string or
 #@          : stream.
