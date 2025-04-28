@@ -1,47 +1,38 @@
 #!/usr/bin/env bash
-#@ Function : trim ltrim rtrim trimv trimall
-#@ Desc     : Delete leading/trailing blank characters from a string or
-#@          : stream.
-#@          :
-#@          : Blank charaters are space, tab, and new-line.
-#@          :
-#@          :   trim    strip string/file of leading+trailing blank chars.
-#@          :   ltrim   strip string/file of leading blank chars.
-#@          :   rtrim   strip string/file of trailing blank chars.
-#@          :   trimv   assign stripped string to variable.
-#@          :   trimall strip string/file of trailing blank chars and double spaces within string.
-#@          :
-#@ Synopsis : trim [-e] string|-
-#@          : ltrim string|-
-#@          : rtrim string|-
-#@          : trimv -n varname string|-
-#@          : trimall string|-
-#@          :
-#@ Examples : #0) strip spaces from around 'str'
-#@          : str=" 123 "; str=$(trim "$str")
-#@          :
-#@          : #1) remove all leading+trailing blanks.
-#@          : trim <fat.file >thin.file
-#@          :
-#@          : #2) remove trailing blanks from file.
-#@          : rtrim <fat.file >lean.file
-#@          :
-#@          : #3) remove all leading+trailing blanks from file, scenic route.
-#@          : rtrim <fat.file | ltrim >thin.file
-#@          :
-#@          : #4) Assign stripped string to varname.
-#@          : trimv -n myvar "  This   is  a messy string.  "
-#@          : echo "$myvar"
-#@          :
+# Module: ltrim
+#
+# Removes leading whitespace from strings or input streams
+#
+# Usage:
+#   ltrim string        # Process command-line argument
+#   ltrim < file        # Process stdin stream
+#
+# Examples:
+#   str="   hello"
+#   str=$(ltrim "$str")  # Result: "hello"
+#
+# See also: trim, rtrim, trimv, trimall
 ltrim() {
-	if(($#)); then
-		local v="$*"
-		echo "${v#"${v%%[![:blank:]]*}"}"
-	else
-		local REPLY
-		while IFS= read -r; do
-			echo "${REPLY#"${REPLY%%[![:blank:]]*}"}"
-		done
-	fi
+  # Process arguments if provided
+  if (($#)); then
+    local v="$*"
+    # Remove leading whitespace using parameter expansion
+    echo "${v#"${v%%[![:blank:]]*}"}"
+  else
+    # Process stdin if available
+    local REPLY
+    while IFS= read -r; do
+      # Remove leading whitespace for each line
+      echo "${REPLY#"${REPLY%%[![:blank:]]*}"}"
+    done
+  fi
 }
 declare -fx ltrim
+
+# Check if the script is being sourced or executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Execute when run directly
+  ltrim "$@"
+fi
+
+#fin

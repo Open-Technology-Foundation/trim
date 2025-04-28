@@ -1,64 +1,72 @@
 #!/usr/bin/env bash
-#@ Function : trim ltrim rtrim trimv trimall
-#@ Desc     : Delete leading/trailing blank characters from a string or
-#@          : stream.
-#@          :
-#@          : Blank charaters are space, tab, and new-line.
-#@          :
-#@          :   trim    strip string/file of leading+trailing blank chars.
-#@          :   ltrim   strip string/file of leading blank chars.
-#@          :   rtrim   strip string/file of trailing blank chars.
-#@          :   trimv   assign stripped string to variable.
-#@          :   trimall strip string/file of trailing blank chars and double spaces within string.
-#@          :
-#@ Synopsis : trim [-e] string|-
-#@          : ltrim string|-
-#@          : rtrim string|-
-#@          : trimv -n varname string|-
-#@          : trimall string|-
-#@          :
-#@ Examples : #0) strip spaces from around 'str'
-#@          : str=" 123 "; str=$(trim "$str")
-#@          :
-#@          : #1) remove all leading+trailing blanks.
-#@          : trim <fat.file >thin.file
-#@          :
-#@          : #2) remove trailing blanks from file.
-#@          : rtrim <fat.file >lean.file
-#@          :
-#@          : #3) remove all leading+trailing blanks from file, scenic route.
-#@          : rtrim <fat.file | ltrim >thin.file
-#@          :
-#@          : #4) Assign stripped string to varname.
-#@          : trimv -n myvar "  This   is  a messy string.  "
-#@          : echo "$myvar"
-#@          :
+# Module: trimv
+#
+# Removes whitespace and assigns result to a variable
+#
+# Usage:
+#   trimv -n varname string  # Assign trimmed string to varname
+#   trimv string             # Output trimmed string to stdout
+#   trimv < file             # Process stdin stream
+#
+# Options:
+#   -n varname  Variable to store result (defaults to TRIM)
+#
+# Examples:
+#   trimv -n result "  hello world  "
+#   echo "$result"  # Outputs: "hello world"
+#
+# Note: When storing multiline input, literal '\n' is added
+#
+# See also: trim, ltrim, rtrim, trimall
 trimv() {
-  if(($#)); then
+  # Check for -n flag to specify a variable name
+  if (($#)); then
     if [[ $1 == '-n' ]]; then
+      # Create a global variable for default fallback
       local -g TRIM
+      # Set up name reference to target variable, defaulting to TRIM
       declare -n Var=${2:-TRIM}
+      # Remove processed arguments
       shift 2
     fi
   fi
-  if(($#)); then
+
+  # Process command-line arguments if present
+  if (($#)); then
     local -- v="$*"
+    # Remove leading whitespace
     v="${v#"${v%%[![:blank:]]*}"}"
+
     if [[ -R Var ]]; then
+      # Assign to the target variable if using -n
       Var="${v%"${v##*[![:blank:]]}"}"
     else
+      # Otherwise print to stdout
       echo -n "${v%"${v##*[![:blank:]]}"}"
     fi
   else
+    # Process stdin if no arguments
     local -- REPLY
     while read -r; do
+      # Remove leading whitespace
       REPLY="${REPLY#"${REPLY%%[![:blank:]]*}"}"
+
       if [[ -R Var ]]; then
+        # Append to the target variable with newline if using -n
         Var+="${REPLY%"${REPLY##*[![:blank:]]}"}\n"
       else
+        # Otherwise print to stdout
         echo -n "${REPLY%"${REPLY##*[![:blank:]]}"}"
       fi
     done
   fi
 }
 declare -fx trimv
+
+# Check if the script is being sourced or executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Execute when run directly
+  trimv "$@"
+fi
+
+#fin

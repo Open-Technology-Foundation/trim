@@ -1,45 +1,39 @@
 #!/usr/bin/env bash
-#@ Function : trim ltrim rtrim trimv trimall
-#@ Desc     : Delete leading/trailing blank characters from a string or
-#@          : stream.
-#@          :
-#@          : Blank charaters are space, tab, and new-line.
-#@          :
-#@          :   trim    strip string/file of leading+trailing blank chars.
-#@          :   ltrim   strip string/file of leading blank chars.
-#@          :   rtrim   strip string/file of trailing blank chars.
-#@          :   trimv   assign stripped string to variable.
-#@          :   trimall strip string/file of trailing blank chars and double spaces within string.
-#@          :
-#@ Synopsis : trim [-e] string|-
-#@          : ltrim string|-
-#@          : rtrim string|-
-#@          : trimv -n varname string|-
-#@          : trimall string|-
-#@          :
-#@ Examples : #0) strip spaces from around 'str'
-#@          : str=" 123 "; str=$(trim "$str")
-#@          :
-#@          : #1) remove all leading+trailing blanks.
-#@          : trim <fat.file >thin.file
-#@          :
-#@          : #2) remove trailing blanks from file.
-#@          : rtrim <fat.file >lean.file
-#@          :
-#@          : #3) remove all leading+trailing blanks from file, scenic route.
-#@          : rtrim <fat.file | ltrim >thin.file
-#@          :
-#@          : #4) Assign stripped string to varname.
-#@          : trimv -n myvar "  This   is  a messy string.  "
-#@          : echo "$myvar"
-#@          :
-#don't judge me.
+# Module: trimall
+#
+# Normalizes whitespace by removing leading/trailing whitespace and collapsing internal spaces
+#
+# Usage: trimall string
+#
+# Returns: String with normalized whitespace (single spaces between words)
+#
+# Examples:
+#   str="  multiple    spaces   here  "
+#   str=$(trimall "$str")  # Result: "multiple spaces here"
+#
+# Note: Currently only processes command-line arguments (not stdin)
+#
+# See also: trim, ltrim, rtrim, trimv
+# Disable shellcheck warnings for word splitting (which is intentional here)
 #shellcheck disable=SC2048,SC2086
 trimall() {
-    # Usage: trimall "   example   string    "
-    set -f
-    set -- $*
-    printf '%s\n' "$*"
-    set +f
+  # Normalizes whitespace by removing leading/trailing whitespace and collapsing multiple spaces
+  # Disable globbing to prevent expansion of wildcards in input
+  set -f
+  # Word splitting is intentional here - Bash's word splitting naturally
+  # collapses all whitespace between arguments into single spaces
+  set -- $*
+  # Output the arguments with single spaces between words
+  printf '%s\n' "$*"
+  # Restore globbing
+  set +f
 }
 declare -fx trimall
+
+# Check if the script is being sourced or executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Execute when run directly
+  trimall "$@"
+fi
+
+#fin
