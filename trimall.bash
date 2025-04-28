@@ -32,7 +32,19 @@ declare -fx trimall
 
 # Check if the script is being sourced or executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Execute when run directly
+  set -euo pipefail
+  [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
+    echo "Usage: trimall string    # Normalize whitespace in string"
+    echo ""
+    echo "Returns: String with normalized whitespace (single spaces between words)"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help  Display this help message"
+    echo ""
+    echo "Note: Currently only processes command-line arguments (not stdin)"
+    exit 0
+  }
+
   trimall "$@"
 fi
 

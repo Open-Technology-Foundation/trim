@@ -65,7 +65,18 @@ declare -fx trimv
 
 # Check if the script is being sourced or executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Execute when run directly
+  set -euo pipefail
+  [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
+    echo "Usage: trimv -n varname string    # Assign trimmed string to varname"
+    echo "       trimv string              # Output trimmed string to stdout"
+    echo "       trimv < file              # Process stdin stream"
+    echo ""
+    echo "Options:"
+    echo "  -n varname  Variable to store result (defaults to TRIM)"
+    echo "  -h, --help  Display this help message"
+    exit 0
+  }
+
   trimv "$@"
 fi
 

@@ -48,7 +48,17 @@ declare -fx trim
 
 # Check if the script is being sourced or executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Execute when run directly
+  set -euo pipefail
+  [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
+    echo "Usage: trim [-e] string    # Remove leading and trailing whitespace"
+    echo "       trim < file         # Process stdin stream"
+    echo ""
+    echo "Options:"
+    echo "  -e  Process escape sequences in the input string"
+    echo "  -h, --help  Display this help message"
+    exit 0
+  }
+
   trim "$@"
 fi
 

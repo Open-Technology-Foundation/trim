@@ -31,7 +31,16 @@ declare -fx rtrim
 
 # Check if the script is being sourced or executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  # Execute when run directly
+  set -euo pipefail
+  [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
+    echo "Usage: rtrim string    # Remove trailing whitespace"
+    echo "       rtrim < file    # Process stdin stream"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help  Display this help message"
+    exit 0
+  }
+
   rtrim "$@"
 fi
 

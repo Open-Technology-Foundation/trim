@@ -33,9 +33,20 @@ trimall "  multiple    spaces   here  "  # "multiple spaces here"
 
 - **trim [-e] string**
   - `-e` Process escape sequences in the input string
+  - `-h, --help` Display help message
+
+- **ltrim string**
+  - `-h, --help` Display help message
+
+- **rtrim string**
+  - `-h, --help` Display help message
 
 - **trimv -n varname string**
   - `-n varname` Name of variable to store result (defaults to `TRIM`)
+  - `-h, --help` Display help message
+
+- **trimall string**
+  - `-h, --help` Display help message
 
 ## Implementation Details
 
