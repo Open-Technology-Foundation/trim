@@ -100,21 +100,63 @@ find . -name "*.conf" -exec cat {} \; | grep "^[[:space:]]*setting" | ltrim | so
 
 ## Installation
 
-Install directly from GitHub with this one-liner:
+### Option 1: Using the installation script
+
+Clone the repository and run the installation script:
 
 ```bash
-sudo bash -c "git clone https://github.com/Open-Technology-Foundation/trim /usr/share/trim && chmod +x /usr/share/trim/*.bash && ln -sf /usr/share/trim/trim.bash /usr/local/bin/trim && ln -sf /usr/share/trim/ltrim.bash /usr/local/bin/ltrim && ln -sf /usr/share/trim/rtrim.bash /usr/local/bin/rtrim && ln -sf /usr/share/trim/trimv.bash /usr/local/bin/trimv && ln -sf /usr/share/trim/trimall.bash /usr/local/bin/trimall"
+git clone https://github.com/Open-Technology-Foundation/trim
+cd trim
+sudo ./install.sh
 ```
 
-This will:
-1. Clone the repository to `/usr/share/trim`
-2. Make all scripts executable
-3. Create symlinks in `/usr/local/bin` for each utility
+The installation script provides several options:
+
+```bash
+# Display help and available options
+./install.sh --help
+
+# Install to a custom directory
+sudo ./install.sh --dir /opt/trim
+
+# Install without creating symlinks
+sudo ./install.sh --no-symlinks
+
+# Uninstall the utilities
+sudo ./install.sh --uninstall
+```
+
+### Option 2: One-liner installation
+
+For quick installation directly from GitHub:
+
+```bash
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/Open-Technology-Foundation/trim/main/install.sh)"
+```
+
+### Option 3: Manual installation
+
+```bash
+# Clone the repository
+git clone https://github.com/Open-Technology-Foundation/trim /usr/share/trim
+
+# Make scripts executable
+chmod +x /usr/share/trim/*.bash
+
+# Create symlinks in /usr/local/bin
+ln -sf /usr/share/trim/trim.bash /usr/local/bin/trim
+ln -sf /usr/share/trim/ltrim.bash /usr/local/bin/ltrim
+ln -sf /usr/share/trim/rtrim.bash /usr/local/bin/rtrim
+ln -sf /usr/share/trim/trimv.bash /usr/local/bin/trimv
+ln -sf /usr/share/trim/trimall.bash /usr/local/bin/trimall
+```
 
 ## License
 
 GNU General Public License v3.0 - See the LICENSE file for details.
 
-GitHub Repository: https://github.com/Open-Technology-Foundation/trim
+## URL
+
+https://github.com/Open-Technology-Foundation/trim
 
 #fin
