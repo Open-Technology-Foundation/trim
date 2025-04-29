@@ -1,0 +1,3 @@
+	  Mixed tabs and spaces at the beginning	  
+  	  Tabs between spaces  	  
+		Multiple tabs			Multiple spaces    

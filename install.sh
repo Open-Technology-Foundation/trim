@@ -2,10 +2,10 @@
 #
 # Install script for Bash String Trim Utilities
 #
-# This script will:
-# 1. Install the scripts to /usr/share/trim
-# 2. Create symlinks in /usr/local/bin
-# 3. Make all scripts executable
+# This script installs the trim utilities to the system:
+# 1. Copies the script files to the installation directory (default: /usr/share/trim)
+# 2. Creates symlinks in the bin directory (default: /usr/local/bin)
+# 3. Makes all scripts executable
 
 set -euo pipefail
 

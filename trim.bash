@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Module: trim
 #
-# Removes leading and trailing whitespace from strings or input streams
+# Removes leading and trailing whitespace from strings or input streams.
 #
 # Usage: 
 #   trim [-e] string    # Process command-line argument
@@ -9,10 +9,12 @@
 #
 # Options:
 #   -e  Process escape sequences in the input string
+#   -h, --help  Display help message
 #
 # Examples:
-#   str=" 123 "
-#   str=$(trim "$str")  # Result: "123"
+#   str="  hello world  "
+#   str=$(trim "$str")  # Result: "hello world"
+#   echo "  text  " | trim  # Output: "text"
 #
 # See also: ltrim, rtrim, trimv, trimall
 trim() {
@@ -39,8 +41,10 @@ trim() {
     while read -r; do
       # Remove leading whitespace
       REPLY="${REPLY#"${REPLY%%[![:blank:]]*}"}"
-      # Remove trailing whitespace
-      echo "${REPLY%"${REPLY##*[![:blank:]]}"}"
+      # Remove trailing whitespace (use echo -n for consistency with command-line mode)
+      # but append a newline explicitly to maintain line-by-line processing
+      echo -n "${REPLY%"${REPLY##*[![:blank:]]}"}"
+      echo
     done
   fi
 }

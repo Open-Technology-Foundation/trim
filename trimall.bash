@@ -1,32 +1,79 @@
 #!/usr/bin/env bash
 # Module: trimall
 #
-# Normalizes whitespace by removing leading/trailing whitespace and collapsing internal spaces
+# Normalizes whitespace by removing leading/trailing whitespace and collapsing multiple spaces 
+# to single spaces between words.
 #
-# Usage: trimall string
+# Usage: 
+#   trimall [-e] string    # Process command-line argument
+#   trimall < file         # Process stdin stream
 #
-# Returns: String with normalized whitespace (single spaces between words)
+# Options:
+#   -e  Process escape sequences in the input string
+#   -h, --help  Display help message
 #
 # Examples:
 #   str="  multiple    spaces   here  "
 #   str=$(trimall "$str")  # Result: "multiple spaces here"
-#
-# Note: Currently only processes command-line arguments (not stdin)
+#   
+#   echo "  line1\n  line2  " | trimall  # Output: "line1 line2"
 #
 # See also: trim, ltrim, rtrim, trimv
 # Disable shellcheck warnings for word splitting (which is intentional here)
 #shellcheck disable=SC2048,SC2086
 trimall() {
-  # Normalizes whitespace by removing leading/trailing whitespace and collapsing multiple spaces
-  # Disable globbing to prevent expansion of wildcards in input
-  set -f
-  # Word splitting is intentional here - Bash's word splitting naturally
-  # collapses all whitespace between arguments into single spaces
-  set -- $*
-  # Output the arguments with single spaces between words
-  printf '%s\n' "$*"
-  # Restore globbing
-  set +f
+  local process_escape=false
+  
+  # Check for -e flag to process escape sequences
+  if [[ "${1:-}" == '-e' ]]; then
+    process_escape=true
+    shift
+  fi
+  
+  # Process arguments if provided
+  if (($#)); then
+    local -- v
+    
+    # Process escape sequences if -e flag was used
+    if [[ $process_escape == true ]]; then
+      v="$(echo -en "$*")"
+    else
+      v="$*"
+    fi
+    
+    # Use Bash's word splitting to normalize whitespace
+    set -f  # Disable globbing
+    set -- $v  # Word splitting collapses whitespace between arguments
+    echo -n "$*"  # Output with single spaces between words
+    set +f  # Restore globbing
+    return 0
+  fi
+  
+  # Process stdin if no arguments provided
+  if [[ ! -t 0 ]]; then
+    # Read all input into a variable
+    local content=""
+    local line
+    
+    # Process each line from stdin
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      # Add each line to content with a space
+      [[ -n "$content" ]] && content+=" "
+      content+="$line"
+    done
+    
+    # If we have content, normalize it
+    if [[ -n "$content" ]]; then
+      # Disable globbing
+      set -f
+      # Process with word splitting to normalize spaces
+      set -- $content
+      # Output result without trailing newline
+      echo -n "$*"
+      # Restore globbing
+      set +f
+    fi
+  fi
 }
 declare -fx trimall
 
@@ -34,14 +81,14 @@ declare -fx trimall
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   set -euo pipefail
   [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
-    echo "Usage: trimall string    # Normalize whitespace in string"
+    echo "Usage: trimall [-e] string    # Normalize whitespace in string"
+    echo "       trimall < file         # Process stdin stream"
     echo ""
     echo "Returns: String with normalized whitespace (single spaces between words)"
     echo ""
     echo "Options:"
+    echo "  -e          Process escape sequences in the input string"
     echo "  -h, --help  Display this help message"
-    echo ""
-    echo "Note: Currently only processes command-line arguments (not stdin)"
     exit 0
   }
 

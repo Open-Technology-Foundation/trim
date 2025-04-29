@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Module: trimv
 #
-# Removes whitespace and assigns result to a variable
+# Removes leading and trailing whitespace and assigns result to a variable.
+# Can also output trimmed result to stdout if no variable name is specified.
 #
 # Usage:
 #   trimv [-e] [-n varname] string  # Assign trimmed string to varname
@@ -11,10 +12,14 @@
 # Options:
 #   -e          Process escape sequences in the input string
 #   -n varname  Variable to store result (defaults to TRIM)
+#   -h, --help  Display help message
 #
 # Examples:
-#   trimv -n result "  hello world  "
-#   echo "$result"  # Outputs: "hello world"
+#   trimv -n result "  hello world  "  # Assigns trimmed result to $result
+#   echo "$result"                     # Outputs: "hello world"
+#   
+#   trimv -e -n content "\t hello \n"  # Process escape sequences and store in $content
+#   cat file.txt | trimv -n data       # Read from file, trim, store in $data
 #
 # See also: trim, ltrim, rtrim, trimall
 trimv() {
@@ -76,33 +81,30 @@ trimv() {
   else
     # Process stdin if no arguments
     if [[ -n "$varname" ]]; then
-      # Process input and write to temporary file
+      # Create secure temporary file with appropriate permissions
       local tmp_file
-      tmp_file=$(mktemp)
+      tmp_file=$(mktemp -t "trimv_XXXXXXXXXX")
+      chmod 600 "$tmp_file"
       
-      # Read line by line, trim, and save to temp file
+      # Process input line by line, applying trim operation
       local REPLY
       while read -r; do
-        # Remove leading whitespace
+        # Remove leading and trailing whitespace
         REPLY="${REPLY#"${REPLY%%[![:blank:]]*}"}"
-        # Remove trailing whitespace
         echo "${REPLY%"${REPLY##*[![:blank:]]}"}" >> "$tmp_file"
       done
       
-      # Read the processed content into the variable
+      # Set variable content from file
       if [[ -s "$tmp_file" ]]; then
-        # Use cat to avoid potential problems with special characters
         local content
         content=$(<"$tmp_file")
-        # Set the variable using eval
         eval "$varname=\"\$content\""
       else
-        # Empty file, set to empty string
         eval "$varname=''"
       fi
       
-      # Clean up
-      rm -f "$tmp_file"
+      # Clean up temporary file securely
+      rm -f "$tmp_file" 2>/dev/null || true
     else
       # Process line by line for stdout
       local -- REPLY

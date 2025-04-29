@@ -1,0 +1,5 @@
+  Line one with leading and trailing spaces
+    Line two with more leading spaces
+Line three with no leading spaces
+	Line four with a tab
+

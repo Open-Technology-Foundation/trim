@@ -1,0 +1,3 @@
+  Text with \t tab and \n newline escape sequences  
+  Actual tab:	Actual newline:
+  More \t\t escape \n\n sequences  
