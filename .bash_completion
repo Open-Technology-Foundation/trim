@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Bash completion for trim utilities: ltrim, rtrim, trim, trimall, trimv
+
+_trim_completion() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local cmd="${COMP_WORDS[0]##*/}"
+  
+  case "$cmd" in
+    trim|ltrim|rtrim|trimall)
+      COMPREPLY=($(compgen -W "-e -h --help" -- "$cur"))
+      ;;
+    trimv)
+      if [[ $COMP_CWORD -eq 1 ]]; then
+        COMPREPLY=($(compgen -W "-e -n -h --help" -- "$cur"))
+      elif [[ ${COMP_WORDS[COMP_CWORD-1]} == "-n" ]]; then
+        # No completion for variable names
+        COMPREPLY=()
+      else
+        COMPREPLY=($(compgen -W "-e -n -h --help" -- "$cur"))
+      fi
+      ;;
+  esac
+}
+
+complete -F _trim_completion trim
+complete -F _trim_completion ltrim
+complete -F _trim_completion rtrim
+complete -F _trim_completion trimall
+complete -F _trim_completion trimv
+
+#fin

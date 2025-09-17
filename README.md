@@ -61,61 +61,183 @@ trimall "  multiple    spaces   here  "  # Output: "multiple spaces here"
 
 ## Examples
 
-### Processing User Input
+### Everyday Programming Scenarios
 
 ```bash
-# Clean user input before processing
-read -p "Enter value: " input
-clean_input=$(trim "$input")
-echo "Processing: '$clean_input'"
-```
+# Parse and clean JSON or YAML config values
+CONFIG_VALUE=$(grep "^[[:space:]]*api_key:" config.yml | cut -d':' -f2 | trim)
+echo "Using API key: $CONFIG_VALUE"
 
-### File Processing
+# Standardize CSV data import
+while IFS=, read -r id name email; do
+  # Clean each field properly - note the variable assignment
+  trimv -n ID "$id"
+  trimv -n NAME "$name"
+  trimv -n EMAIL "$email"
+  
+  echo "Processing user: $ID -> $NAME ($EMAIL)"
+done < users.csv
 
-```bash
-# Remove indentation from config files but keep trailing spaces
-while IFS= read -r line; do
-  key_value=$(ltrim "$line")
-  process_config_line "$key_value"
-done < config.txt
-```
-
-### Handling Multiline Content
-
-```bash
-# Normalize multiline content for comparison
-normalized1=$(cat file1.txt | trimall)
-normalized2=$(cat file2.txt | trimall)
-
-if [[ "$normalized1" == "$normalized2" ]]; then
-  echo "Files match when normalized"
+# Normalize command output for parsing
+disk_usage=$(df -h | grep "/$" | awk '{print $5}' | trim)
+if [[ "${disk_usage%\%}" -gt 90 ]]; then
+  echo "Warning: Disk usage is $disk_usage"
 fi
 ```
 
-### Processing Escape Sequences
+### Advanced Variable Management with trimv
 
 ```bash
-# Handle tab-delimited data with escape sequences
-data="Name\\tValue\\tDescription"
-parsed_data=$(trim -e "$data")
-echo "$parsed_data"  # Output: "Name	Value	Description"
+# Cleaner variable assignment without nested subshells
+trimv -n API_RESPONSE "$(curl -s https://api.example.com/status)"
+
+# Store multiline output with proper whitespace handling
+trimv -n SQL_QUERY "
+    SELECT 
+        user_id, 
+        first_name,
+        last_name 
+    FROM users 
+    WHERE status = 'active'
+"
+echo "Running query: $SQL_QUERY"
+
+# Clean up values from environment variables with escape sequences
+trimv -e -n PATH_CLEAN "$PATH_WITH_ESCAPES"
+
+# Create normalized environment variables for a process
+export APP_ARGS=$(trimall "$USER_PROVIDED_ARGS")
 ```
 
-### Using in Loops
+### Data Processing and Validation
 
 ```bash
-# Process file names, removing whitespace
-for file in *.txt; do
-  name=$(basename "$file" .txt | trim)
-  echo "Processing: $name"
+# Extract and validate configuration properties
+prop_pattern="^[[:space:]]*[a-zA-Z0-9._-]+"
+while IFS= read -r line; do
+  # Skip comments and empty lines
+  [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+  
+  # Extract property name (keep only leading whitespace)
+  prop_name=$(echo "$line" | grep -o "$prop_pattern" | rtrim)
+  # Extract property value (remove all excess whitespace)
+  prop_value=$(echo "$line" | sed "s/$prop_pattern[[:space:]]*=[[:space:]]*//" | trim)
+  
+  echo "Property: '$prop_name' = '$prop_value'"
+done < application.properties
+
+# Clean up and normalize data for comparison
+if [[ "$(trimall < file1.log)" == "$(trimall < file2.log)" ]]; then
+  echo "Log contents match when normalized"
+fi
+```
+
+### Shell Script Development
+
+```bash
+# Source the trim utilities for use as functions
+source /usr/share/trim/trim.bash
+source /usr/share/trim/trimv.bash
+
+# Define a clean logging function
+log_message() {
+  local level="$1"
+  shift
+  local message="$*"
+  
+  # Create a properly formatted timestamp
+  timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+  
+  # Ensure consistent formatting regardless of input whitespace
+  echo "[$timestamp] ${level^^}: $(trim "$message")"
+}
+
+log_message "info" "  Starting application...  "
+
+# Parse command output safely
+get_container_id() {
+  local name="$1"
+  local container_id
+  
+  # Use trimv to safely capture and clean the command output
+  trimv -n container_id "$(docker ps --format '{{.ID}}' --filter "name=$name" 2>/dev/null)"
+  
+  if [[ -z "$container_id" ]]; then
+    echo "No container found with name: $name" >&2
+    return 1
+  fi
+  
+  echo "$container_id"
+}
+```
+
+### Processing Special Formats
+
+```bash
+# Parse and normalize tab-delimited data
+cat data.tsv | while IFS=$'\t' read -r field1 field2 field3; do
+  # Handle fields that may contain escape sequences
+  trimv -e -n f1 "$field1"
+  trimv -e -n f2 "$field2"
+  trimv -e -n f3 "$field3"
+  
+  printf "%-20s | %-30s | %s\n" "$f1" "$f2" "$f3"
 done
+
+# Clean up multiline code snippets for documentation
+code_block=$(cat <<EOF
+    function example() {
+        // This is sample code
+        const result = process(input);
+        return result;
+    }
+EOF
+)
+trimv -n clean_code "$code_block"
+echo "```javascript"
+echo "$clean_code"
+echo "```"
 ```
 
-### Advanced Pipeline Usage
+### DevOps and System Administration
 
 ```bash
-# Extract and clean settings from config files
-find . -name "*.conf" | xargs cat | grep "^[[:space:]]*setting" | ltrim | sort
+# Clean up output from system commands for logging
+system_info=$(uname -a | trim)
+echo "System: $system_info" >> system_report.log
+
+# Process output from multiple commands with standardized whitespace
+{
+  echo "=== SYSTEM REPORT ==="
+  echo "Hostname: $(hostname | trim)"
+  echo "Kernel: $(uname -r | trim)"
+  echo "Uptime: $(uptime | trimall)"
+  echo "Memory:"
+  free -h | while IFS= read -r line; do
+    echo "  $(trim "$line")"
+  done
+} > system_report.txt
+
+# Extract and verify configuration settings
+verify_config() {
+  local config_file="$1"
+  local required_settings=("host" "port" "user" "timeout")
+  local missing=()
+  
+  for setting in "${required_settings[@]}"; do
+    value=$(grep "^[[:space:]]*$setting[[:space:]]*=" "$config_file" | cut -d'=' -f2 | trim)
+    if [[ -z "$value" ]]; then
+      missing+=("$setting")
+    fi
+  done
+  
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "Error: Missing required settings: ${missing[*]}"
+    return 1
+  fi
+  
+  return 0
+}
 ```
 
 ## Installation

@@ -35,7 +35,7 @@ trimv() {
     fi
     
     # Check for -n flag to specify a variable name
-    if [[ $1 == '-n' ]]; then
+    if [[ ${1:-} == '-n' ]]; then
       # Get variable name, default to TRIM
       varname="${2:-TRIM}"
       

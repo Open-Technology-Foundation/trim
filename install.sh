@@ -45,7 +45,7 @@ EOF
 NO_SYMLINKS=0
 UNINSTALL=0
 
-while [[ $# -gt 0 ]]; do
+while (($#)); do
   case $1 in
     -h|--help)
       show_help
@@ -67,8 +67,8 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     *)
-      echo "Error: Unknown option: $1"
-      show_help
+      >&2 echo "Error: Unknown option: $1"
+      >&2 show_help
       ;;
   esac
 done
@@ -76,8 +76,8 @@ done
 # Check if running as root (needed for system dirs)
 check_root() {
   ((EUID)) && {
-    echo "Error: This script must be run as root to install to system directories."
-    echo "$(basename -- "$0") --help"
+    >&2 echo "Error: This script must be run as root to install to system directories."
+    >&2 echo "$(basename -- "$0") --help"
     exit 1
   }
   return 0
@@ -123,10 +123,19 @@ install() {
       cp "$script" "$INSTALL_DIR/"
       chmod +x "$INSTALL_DIR/$script"
     else
-      echo "Warning: Script not found: $script"
+      >&2 echo "Warning: Script not found: $script"
     fi
   done
   
+  # Create trim.inc.sh (all modules in one)
+  ( echo '#!/usr/bin/env bash'
+    declare -a Files=()
+    declare -- file
+    readarray -r Files < <(find "$INSTALL_DIR" -type f -name '*.bash')
+    for file in "${Files[@]}"; do echo "source -- '$file'"; done
+    echo '#fin'
+  ) >"$INSTALL_DIR"/trim.inc.sh
+
   # Create symlinks if requested
   if [[ $NO_SYMLINKS -eq 0 ]]; then
     echo "Creating symlinks in $SYMLINK_DIR..."
