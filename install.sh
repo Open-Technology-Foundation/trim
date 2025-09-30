@@ -3,18 +3,18 @@
 # Install script for Bash String Trim Utilities
 #
 # This script installs the trim utilities to the system:
-# 1. Copies the script files to the installation directory (default: /usr/share/trim)
+# 1. Copies the script files to the installation directory (default: /usr/share/yatti/trim)
 # 2. Creates symlinks in the bin directory (default: /usr/local/bin)
 # 3. Makes all scripts executable
 
 set -euo pipefail
 
 # Default installation directories
-INSTALL_DIR="/usr/share/trim"
-SYMLINK_DIR="/usr/local/bin"
+declare -- INSTALL_DIR="/usr/share/yatti/trim"
+declare -- SYMLINK_DIR="/usr/local/bin"
 
 # Script files to install
-SCRIPTS=("trim.bash" "ltrim.bash" "rtrim.bash" "trimv.bash" "trimall.bash")
+declare -a SCRIPTS=("trim.bash" "ltrim.bash" "rtrim.bash" "trimv.bash" "trimall.bash" "squeeze.bash")
 
 # Display help message
 show_help() {
@@ -42,8 +42,8 @@ EOF
 }
 
 # Parse command line arguments
-NO_SYMLINKS=0
-UNINSTALL=0
+declare -i NO_SYMLINKS=0
+declare -i UNINSTALL=0
 
 while (($#)); do
   case $1 in
@@ -68,7 +68,8 @@ while (($#)); do
       ;;
     *)
       >&2 echo "Error: Unknown option: $1"
-      >&2 show_help
+      >&2 echo "Try './install.sh --help' for more information."
+      exit 22
       ;;
   esac
 done
@@ -85,8 +86,10 @@ check_root() {
 
 # Uninstall function
 uninstall() {
+  local -- script base_name symlink
+
   echo "Uninstalling trim utilities..."
-  
+
   # Remove symlinks
   for script in "${SCRIPTS[@]}"; do
     base_name="${script%.bash}"
@@ -97,7 +100,7 @@ uninstall() {
     fi
   done
   
-  # Remove installation directory
+  # Remove installation directory (only the trim subdirectory, preserving parent /usr/share/yatti)
   if [[ -d "$INSTALL_DIR" ]]; then
     echo "Removing directory: $INSTALL_DIR"
     rm -rf "$INSTALL_DIR"
@@ -109,6 +112,8 @@ uninstall() {
 
 # Main installation function
 install() {
+  local -- script base_name symlink
+
   # Create installation directory if it doesn't exist
   if [[ ! -d "$INSTALL_DIR" ]]; then
     echo "Creating directory: $INSTALL_DIR"
@@ -128,11 +133,25 @@ install() {
   done
   
   # Create trim.inc.sh (all modules in one)
-  ( echo '#!/usr/bin/env bash'
-    declare -a Files=()
-    declare -- file
-    readarray -r Files < <(find "$INSTALL_DIR" -type f -name '*.bash')
-    for file in "${Files[@]}"; do echo "source -- '$file'"; done
+  ( echo '#!/bin/bash'
+    echo "# Bash String Trim Utilities - Combined Module File"
+    echo "#"
+    echo "# This file combines all trim utility functions into a single file"
+    echo "# for easy sourcing. Source this file to load all trim functions:"
+    echo "#   source $INSTALL_DIR/trim.inc.sh"
+    echo "#"
+    echo "# Available functions: trim, ltrim, rtrim, trimv, trimall, squeeze"
+    echo
+    echo
+    local -a Files=()
+    local -- file
+    readarray -t Files < <(find "$INSTALL_DIR" -maxdepth 1 -type f -name '*.bash')
+    for file in "${Files[@]}"; do
+      #shellcheck disable=SC1090
+      source -- "$file"
+      declare -pf "$(basename -s .bash -- "$file")"
+      echo
+    done
     echo '#fin'
   ) >"$INSTALL_DIR"/trim.inc.sh
 
@@ -158,7 +177,7 @@ install() {
 }
 
 # Check if running as root for standard system paths
-if [[ "$INSTALL_DIR" == "/usr/share/trim" || "$SYMLINK_DIR" == "/usr/local/bin" ]]; then
+if [[ "$INSTALL_DIR" == "/usr/share/yatti/trim" || "$SYMLINK_DIR" == "/usr/local/bin" ]]; then
   check_root
 fi
 

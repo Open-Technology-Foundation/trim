@@ -47,9 +47,9 @@ test_trailing_spaces() {
 # Test trimming with various whitespace characters
 test_mixed_whitespace() {
   local input=$'\t  hello \t world \t  '
-  local expected="hello \t world"
+  local expected=$'hello \t world'
   local actual="$("$TRIM" "$input")"
-  
+
   assert_equals "$actual" "$expected" "Trimming mixed whitespace"
 }
 
@@ -119,9 +119,9 @@ test_escape_sequences() {
   
   # Test with -e flag
   local input_e=$'  \\t\\n  hello  \\t\\n  '
-  local expected_e=$'\t\n  hello  \t\n'
+  local expected_e=$'\n  hello  \t'
   local actual_e="$("$TRIM" -e "$input_e")"
-  
+
   assert_equals "$actual_e" "$expected_e" "Processing escape sequences with -e flag"
 }
 

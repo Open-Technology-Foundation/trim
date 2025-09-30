@@ -30,14 +30,14 @@ run_test() {
   
   # Run the test script and capture output and exit code
   if "$test_script"; then
-    ((passed_tests++))
+    ((passed_tests+=1))
     echo -e "${GREEN}✓ $test_name passed${NC}"
   else
-    ((failed_tests++))
+    ((failed_tests+=1))
     echo -e "${RED}✗ $test_name failed${NC}"
   fi
-  
-  ((total_tests++))
+
+  ((total_tests+=1))
   echo ""
 }
 

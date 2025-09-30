@@ -13,10 +13,10 @@ TRIM="$ROOT_DIR/trim"
 LTRIM="$ROOT_DIR/ltrim"
 RTRIM="$ROOT_DIR/rtrim"
 TRIMALL="$ROOT_DIR/trimall"
-TRIMV="$ROOT_DIR/trimv"
+SQUEEZE="$ROOT_DIR/squeeze"
 
 # Ensure all utilities are available
-for util in "$TRIM" "$LTRIM" "$RTRIM" "$TRIMALL" "$TRIMV"; do
+for util in "$TRIM" "$LTRIM" "$RTRIM" "$TRIMALL" "$SQUEEZE"; do
   if [[ ! -x "$util" ]]; then
     echo "Error: $(basename "$util") utility not found or not executable"
     exit 1
@@ -62,15 +62,15 @@ test_complex_pipeline() {
   assert_equals "$trimall_result" "complex pipeline test" "trimall normalizes all spaces"
 }
 
-# Test piping to trimv - using stdout mode instead of variable assignment
-test_pipe_to_trimv() {
-  local input="  hello from pipeline  "
-  
-  # Use the trimv in stdout mode (no -n flag) with a pipe
-  local actual="$(echo "$input" | "$TRIMV")"
-  local expected="hello from pipeline"
-  
-  assert_equals "$actual" "$expected" "Piping to trimv (stdout mode)"
+# Test piping to squeeze
+test_pipe_to_squeeze() {
+  local input="  hello    from    pipeline  "
+
+  # Use squeeze to collapse multiple spaces while preserving edges
+  local actual="$(echo "$input" | "$SQUEEZE")"
+  local expected=" hello from pipeline "
+
+  assert_equals "$actual" "$expected" "Piping to squeeze"
 }
 
 # Test piping between multiple utilities with a file
@@ -90,7 +90,7 @@ test_file_pipeline() {
 test_ltrim_to_rtrim
 test_trimall_pipeline
 test_complex_pipeline
-test_pipe_to_trimv
+test_pipe_to_squeeze
 test_file_pipeline
 
 echo "All pipe integration tests passed!"

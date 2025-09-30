@@ -94,10 +94,10 @@ test_sourced_stdin() {
 test_sourced_trimv_stdin() {
   local test_var=""
   local input="  hello from stdin  "
-  
-  # Use echo to pipe to trimv
-  echo "$input" | trimv -n test_var
-  
+
+  # Use process substitution to avoid subshell (pipelines don't work with -n)
+  trimv -n test_var < <(echo "$input")
+
   local expected="hello from stdin"
   assert_equals "$test_var" "$expected" "sourced trimv with stdin"
 }

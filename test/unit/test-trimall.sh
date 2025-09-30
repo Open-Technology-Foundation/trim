@@ -93,10 +93,12 @@ test_escape_sequences() {
   assert_equals "$actual" "$expected" "Default behavior with escape sequences"
   
   # Test with -e flag
+  # When -e processes escape sequences, tabs and newlines become actual whitespace
+  # trimall then normalizes ALL whitespace (including tabs/newlines) to single spaces
   local input_e=$'  \\t  hello \\n  world  '
-  local expected_e=$'\t hello \n world'
+  local expected_e="hello world"
   local actual_e="$("$TRIMALL" -e "$input_e")"
-  
+
   assert_equals "$actual_e" "$expected_e" "Processing escape sequences with -e flag"
 }
 

@@ -23,8 +23,8 @@
 #
 # See also: trim, ltrim, rtrim, trimall
 trimv() {
-  local process_escape=false
-  local varname=""
+  local -- process_escape=false
+  local -- varname=""
   
   # Process command line options
   if (($#)); then
@@ -78,41 +78,45 @@ trimv() {
       # Otherwise print to stdout
       echo -n "$v"
     fi
-  else
-    # Process stdin if no arguments
+    return 0
+  fi
+
+  # Process stdin if no arguments
+  if [[ ! -t 0 ]]; then
     if [[ -n "$varname" ]]; then
       # Create secure temporary file with appropriate permissions
-      local tmp_file
+      local -- tmp_file
       tmp_file=$(mktemp -t "trimv_XXXXXXXXXX")
       chmod 600 "$tmp_file"
-      
+
       # Process input line by line, applying trim operation
-      local REPLY
-      while read -r; do
+      local -- REPLY
+      while IFS= read -r REPLY || [[ -n "$REPLY" ]]; do
         # Remove leading and trailing whitespace
         REPLY="${REPLY#"${REPLY%%[![:blank:]]*}"}"
-        echo "${REPLY%"${REPLY##*[![:blank:]]}"}" >> "$tmp_file"
+        REPLY="${REPLY%"${REPLY##*[![:blank:]]}"}"
+        echo "$REPLY" >> "$tmp_file"
       done
-      
+
       # Set variable content from file
       if [[ -s "$tmp_file" ]]; then
-        local content
+        local -- content
         content=$(<"$tmp_file")
         eval "$varname=\"\$content\""
       else
         eval "$varname=''"
       fi
-      
+
       # Clean up temporary file securely
       rm -f "$tmp_file" 2>/dev/null || true
     else
       # Process line by line for stdout
       local -- REPLY
-      while read -r; do
-        # Remove leading whitespace
+      while IFS= read -r REPLY || [[ -n "$REPLY" ]]; do
+        # Remove leading and trailing whitespace
         REPLY="${REPLY#"${REPLY%%[![:blank:]]*}"}"
-        # Remove trailing whitespace
-        echo -n "${REPLY%"${REPLY##*[![:blank:]]}"}"
+        REPLY="${REPLY%"${REPLY##*[![:blank:]]}"}"
+        echo "$REPLY"
       done
     fi
   fi
@@ -121,20 +125,40 @@ declare -fx trimv
 
 # Check if the script is being sourced or executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  set -euo pipefail
-  [[ "${1:-}" == '-h' || "${1:-}" == '--help' ]] && {
-    echo "Usage: trimv [-e] [-n varname] string    # Assign trimmed string to varname"
-    echo "       trimv string              # Output trimmed string to stdout"
-    echo "       trimv < file              # Process stdin stream"
-    echo ""
-    echo "Options:"
-    echo "  -e          Process escape sequences in the input string"
-    echo "  -n varname  Variable to store result (defaults to TRIM)"
-    echo "  -h, --help  Display this help message"
-    exit 0
-  }
+  cat <<'EOT'
+trimv - Remove leading and trailing whitespace and assign to a variable
 
-  trimv "$@"
+Usage:
+  source /usr/share/yatti/trim/trimv.bash
+  trimv [-e] [-n varname] string
+
+Options:
+  -e          Process escape sequences in the input string
+  -n varname  Variable to store result (defaults to TRIM)
+  -h, --help  Display this help message
+
+Examples:
+  source /usr/share/yatti/trim/trimv.bash
+  trimv -n RESULT "  hello world  "
+  echo "$RESULT"                        # Outputs: hello world
+
+  trimv -e -n CONTENT "\t hello \n"     # Process escape sequences
+  cat file.txt | trimv -n DATA          # Read from stdin
+
+Note:
+  This utility MUST be sourced to use the -n variable assignment feature.
+  When run as a script, variable assignments only affect the subprocess and
+  are not visible in the parent shell.
+
+  To use trimv, source it first:
+    source /usr/share/yatti/trim/trimv.bash
+
+  Or source all utilities at once:
+    source /usr/share/yatti/trim/trim.inc.sh
+
+See also: trim, ltrim, rtrim, trimall, squeeze
+EOT
+  exit 0
 fi
 
 #fin

@@ -13,6 +13,7 @@ These utilities provide efficient text trimming operations using pure Bash param
 - **rtrim** - Removes only trailing whitespace
 - **trimv** - Removes whitespace and assigns result to a variable
 - **trimall** - Normalizes whitespace (removes leading/trailing spaces and collapses multiple spaces to single spaces)
+- **squeeze** - Squeezes consecutive blanks (spaces/tabs) to single spaces while preserving leading/trailing whitespace
 
 ## Basic Usage
 
@@ -32,6 +33,9 @@ echo "$result"               # Output: "hello world"
 
 # Normalize all whitespace
 trimall "  multiple    spaces   here  "  # Output: "multiple spaces here"
+
+# Squeeze consecutive blanks
+squeeze "  hello    world  "             # Output: " hello world "
 ```
 
 ## Command Options
@@ -49,12 +53,15 @@ trimall "  multiple    spaces   here  "  # Output: "multiple spaces here"
 | | `-h, --help` | Display help message |
 | **trimall** | `-e` | Process escape sequences |
 | | `-h, --help` | Display help message |
+| **squeeze** | `-e` | Process escape sequences in the input |
+| | `-h, --help` | Display help message |
 
 ## Key Features
 
 - **Efficient Implementation** - Uses Bash parameter expansion with `[:blank:]` character class
 - **No Dependencies** - Pure Bash implementation, no external tools required
 - **Dual Usage** - Functions both as standalone commands and as sourceable functions
+- **Combined Module File** - Source all functions at once with `trim.inc.sh`
 - **Handles Streams** - Process stdin/stdout for pipeline integration
 - **Escape Sequence Support** - Process backslash escape sequences with the `-e` flag
 - **Variable Assignment** - Store results directly in variables with `trimv`
@@ -68,13 +75,14 @@ trimall "  multiple    spaces   here  "  # Output: "multiple spaces here"
 CONFIG_VALUE=$(grep "^[[:space:]]*api_key:" config.yml | cut -d':' -f2 | trim)
 echo "Using API key: $CONFIG_VALUE"
 
-# Standardize CSV data import
+# Standardize CSV data import (requires sourcing trimv first)
+source /usr/share/yatti/trim/trimv.bash
 while IFS=, read -r id name email; do
   # Clean each field properly - note the variable assignment
   trimv -n ID "$id"
   trimv -n NAME "$name"
   trimv -n EMAIL "$email"
-  
+
   echo "Processing user: $ID -> $NAME ($EMAIL)"
 done < users.csv
 
@@ -86,6 +94,8 @@ fi
 ```
 
 ### Advanced Variable Management with trimv
+
+The following examples assume trimv has been sourced or is available in PATH:
 
 ```bash
 # Cleaner variable assignment without nested subshells
@@ -135,9 +145,12 @@ fi
 ### Shell Script Development
 
 ```bash
-# Source the trim utilities for use as functions
-source /usr/share/trim/trim.bash
-source /usr/share/trim/trimv.bash
+# Source all trim utilities at once using the combined module file
+source /usr/share/yatti/trim/trim.inc.sh
+
+# Or source individual utilities as needed
+source /usr/share/yatti/trim/trim.bash
+source /usr/share/yatti/trim/trimv.bash
 
 # Define a clean logging function
 log_message() {
@@ -266,6 +279,11 @@ sudo ./install.sh --no-symlinks
 sudo ./install.sh --uninstall
 ```
 
+The installation creates the following files:
+- Individual utility scripts in `/usr/share/yatti/trim/` (trim.bash, ltrim.bash, etc.)
+- Combined module file `/usr/share/yatti/trim/trim.inc.sh` for sourcing all functions at once
+- Symlinks in `/usr/local/bin/` for command-line usage (trim, ltrim, rtrim, trimv, trimall, squeeze)
+
 ### Option 2: Quick Installation
 
 One-liner to install directly from GitHub:
@@ -278,17 +296,18 @@ sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/Open-Technology-Fou
 
 ```bash
 # Clone repository
-git clone https://github.com/Open-Technology-Foundation/trim /usr/share/trim
+git clone https://github.com/Open-Technology-Foundation/trim /usr/share/yatti/trim
 
 # Make scripts executable
-chmod +x /usr/share/trim/*.bash
+chmod +x /usr/share/yatti/trim/*.bash
 
 # Create symlinks
-ln -sf /usr/share/trim/trim.bash /usr/local/bin/trim
-ln -sf /usr/share/trim/ltrim.bash /usr/local/bin/ltrim
-ln -sf /usr/share/trim/rtrim.bash /usr/local/bin/rtrim
-ln -sf /usr/share/trim/trimv.bash /usr/local/bin/trimv
-ln -sf /usr/share/trim/trimall.bash /usr/local/bin/trimall
+ln -sf /usr/share/yatti/trim/trim.bash /usr/local/bin/trim
+ln -sf /usr/share/yatti/trim/ltrim.bash /usr/local/bin/ltrim
+ln -sf /usr/share/yatti/trim/rtrim.bash /usr/local/bin/rtrim
+ln -sf /usr/share/yatti/trim/trimv.bash /usr/local/bin/trimv
+ln -sf /usr/share/yatti/trim/trimall.bash /usr/local/bin/trimall
+ln -sf /usr/share/yatti/trim/squeeze.bash /usr/local/bin/squeeze
 ```
 
 ## Testing
@@ -310,7 +329,7 @@ The utilities include a comprehensive test suite:
 
 - Requires Bash shell (not POSIX sh compatible)
 - Uses Bash's `[:blank:]` character class which handles spaces and tabs but not all Unicode whitespace
-- When using `trimv` for variable assignment, there are standard Bash subprocess limitations
+- `trimv` must be sourced (not run as a script) for variable assignment to work, as subprocess environments cannot modify parent shell variables
 
 ## License
 

@@ -3,3 +3,4 @@ Line two with more leading spaces
 Line three with no leading spaces
 Line four with a tab
 
+Line six after an empty line
