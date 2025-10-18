@@ -1,30 +1,9 @@
 #!/usr/bin/env bash
-# Module: trimv
-#
-# Removes leading and trailing whitespace and assigns result to a variable.
-# Can also output trimmed result to stdout if no variable name is specified.
-#
-# Usage:
-#   trimv [-e] [-n varname] string  # Assign trimmed string to varname
-#   trimv string                    # Output trimmed string to stdout
-#   trimv < file                    # Process stdin stream
-#
-# Options:
-#   -e          Process escape sequences in the input string
-#   -n varname  Variable to store result (defaults to TRIM)
-#   -h, --help  Display help message
-#
-# Examples:
-#   trimv -n result "  hello world  "  # Assigns trimmed result to $result
-#   echo "$result"                     # Outputs: "hello world"
-#   
-#   trimv -e -n content "\t hello \n"  # Process escape sequences and store in $content
-#   cat file.txt | trimv -n data       # Read from file, trim, store in $data
-#
-# See also: trim, ltrim, rtrim, trimall
+# Removes leading and trailing whitespace and assigns result to a variable
+
 trimv() {
   local -i process_escape=0
-  local -- varname=""
+  local -- varname=''
   
   # Process command line options
   if (($#)); then
@@ -86,7 +65,7 @@ trimv() {
     if [[ -n "$varname" ]]; then
       # Create secure temporary file with appropriate permissions
       local -- tmp_file
-      tmp_file=$(mktemp -t "trimv_XXXXXXXXXX")
+      tmp_file=$(mktemp -t "trimv_XXXXX")
       chmod 600 "$tmp_file"
 
       # Process input line by line, applying trim operation
@@ -101,6 +80,7 @@ trimv() {
       # Set variable content from file
       if [[ -s "$tmp_file" ]]; then
         local -- content
+	#shellcheck disable=SC2034
         content=$(<"$tmp_file")
         eval "$varname=\"\$content\""
       else
@@ -124,25 +104,35 @@ trimv() {
 declare -fx trimv
 
 # Check if the script is being sourced or executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  cat <<'EOT'
-trimv - Remove leading and trailing whitespace and assign to a variable
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] || return 0
+#!/bin/bash #semantic -------------------------------------------------------
+set -euo pipefail
+shopt -s inherit_errexit shift_verbose extglob nullglob
+
+declare -- VERSION='1.0.0' SCRIPT_NAME=trimv.bash
+
+if (($#)); then
+  case $1 in
+    -h|--help)
+        cat <<EOT
+$SCRIPT_NAME $VERSION - Remove leading and trailing whitespace and assign to a variable
 
 Usage:
   source /usr/share/yatti/trim/trimv.bash
   trimv [-e] [-n varname] string
 
 Options:
-  -e          Process escape sequences in the input string
-  -n varname  Variable to store result (defaults to TRIM)
-  -h, --help  Display this help message
+  -e            Process escape sequences in the input string
+  -n varname    Variable to store result (defaults to TRIM)
+  -V,--version  Display "$SCRIPT_NAME $VERSION"
+  -h,--help     Display this help message
 
 Examples:
   source /usr/share/yatti/trim/trimv.bash
   trimv -n RESULT "  hello world  "
-  echo "$RESULT"                        # Outputs: hello world
+  echo "\$RESULT"                        # Outputs: hello world
 
-  trimv -e -n CONTENT "\t hello \n"     # Process escape sequences
+  trimv -e -n CONTENT "\\t hello \\n"     # Process escape sequences
   cat file.txt | trimv -n DATA          # Read from stdin
 
 Note:
@@ -158,7 +148,19 @@ Note:
 
 See also: trim, ltrim, rtrim, trimall, squeeze
 EOT
-  exit 0
+        exit 0
+        ;;
+  -V|--version)
+        echo "$SCRIPT_NAME $VERSION"
+        exit 0
+        ;;
+  -e)
+        ;;
+  -*)   >&2 echo "$SCRIPT_NAME: ✗ Unknown option ${1@Q}"
+        exit 22
+        ;;
+  esac
 fi
 
+trimv "$@"
 #fin

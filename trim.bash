@@ -1,22 +1,6 @@
 #!/usr/bin/env bash
-# Module: trim
-#
-# Removes leading and trailing whitespace from strings or input streams.
-#
-# Usage: 
-#   trim [-e] string    # Process command-line argument
-#   trim < file         # Process stdin stream
-#
-# Options:
-#   -e  Process escape sequences in the input string
-#   -h, --help  Display help message
-#
-# Examples:
-#   str="  hello world  "
-#   str=$(trim "$str")  # Result: "hello world"
-#   echo "  text  " | trim  # Output: "text"
-#
-# See also: ltrim, rtrim, trimv, trimall
+# Removes leading and trailing whitespace from strings or input streams
+
 trim() {
   # Process arguments if provided
   if (($#)); then
@@ -24,7 +8,7 @@ trim() {
     if [[ $1 == '-e' ]]; then
       # Process escape sequences when -e flag is used
       shift
-      v="$(echo -en "$*")"
+      v=$(echo -en "$*")
     else
       v="$*"
     fi
@@ -46,34 +30,51 @@ trim() {
       echo "$REPLY"
     done
   fi
+  return 0
 }
 declare -fx trim
 
 # Check if the script is being sourced or executed directly
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  set -euo pipefail
+[[ "${BASH_SOURCE[0]}" == "${0}" ]] || return 0
+#!/bin/bash #semantic -------------------------------------------------------
+set -euo pipefail
+shopt -s inherit_errexit shift_verbose extglob nullglob
 
-  # Check for help flag in $1 or $2 (after -e)
-  [[ "${1:-}" =~ ^(-h|--help)$ ]] || [[ "${2:-}" =~ ^(-h|--help)$ ]] && {
-    cat <<'EOT'
+declare -- VERSION='1.0.0' SCRIPT_NAME=trim.bash
+
+if (($#)); then
+  case $1 in
+    -h|--help)
+        cat <<EOT
+$SCRIPT_NAME $VERSION - Remove leading and trailing blanks
+
 Usage: trim [-e] string    # Remove leading and trailing whitespace
        trim < file         # Process stdin stream
 
 Options:
-  -e          Process escape sequences in the input string
-  -h, --help  Display this help message
+  -e            Process escape sequences in the input string
+  -V, --version Display "$SCRIPT_NAME $VERSION"
+  -h, --help    Display this help message
+
+Examples:
+  str="  hello world  "
+  str=\$(trim "\$str")        # Result: "hello world"
+  echo "  text  " | trim    # Output: "text"
+
+See also: ltrim, rtrim, trimv, trimall
 EOT
-    exit 0
-  }
+        exit 0
+        ;;
+    -V|--version)
+        echo "$SCRIPT_NAME $VERSION"
+        exit 0
+        ;;
+    -e) ;;
 
-  # Validate flags
-  if [[ "${1:-}" == -* && ! "${1:-}" =~ ^-e$ ]]; then
-    >&2 echo "Error: Unknown option '$1'"
-    >&2 echo "Try 'trim --help' for more information."
-    exit 22
-  fi
-
-  trim "$@"
+    -*) >&2 echo "$SCRIPT_NAME: ✗ Unknown option ${1@Q}"
+        exit 22 ;;
+  esac
 fi
 
+trim "$@"
 #fin
