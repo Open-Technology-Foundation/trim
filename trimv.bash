@@ -23,14 +23,14 @@
 #
 # See also: trim, ltrim, rtrim, trimall
 trimv() {
-  local -- process_escape=false
+  local -i process_escape=0
   local -- varname=""
   
   # Process command line options
   if (($#)); then
     # Check for -e flag to process escape sequences
     if [[ $1 == '-e' ]]; then
-      process_escape=true
+      process_escape=1
       shift
     fi
     
@@ -48,7 +48,7 @@ trimv() {
       # Export to parent environment
       export _TRIMV_VARNAME="$varname"
       # Create variable if it doesn't exist
-      [[ -z "${!varname+x}" ]] && eval "$varname=''"
+      [[ -n "${!varname+x}" ]] || eval "$varname=''"
       
       # Remove processed arguments
       shift 2
@@ -60,7 +60,7 @@ trimv() {
     local -- v
     
     # Process escape sequences if -e flag was used
-    if [[ $process_escape == true ]]; then
+    if ((process_escape)); then
       v="$(echo -en "$*")"
     else
       v="$*"
