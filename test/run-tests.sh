@@ -9,6 +9,8 @@ TEST_DIR="$SCRIPT_DIR"
 FIXTURES_DIR="$TEST_DIR/fixtures"
 UNIT_DIR="$TEST_DIR/unit"
 INTEGRATION_DIR="$TEST_DIR/integration"
+SECURITY_DIR="$TEST_DIR/security"
+STRESS_DIR="$TEST_DIR/stress"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -65,10 +67,40 @@ run_integration_tests() {
   done
 }
 
+# Run all security tests
+run_security_tests() {
+  if [[ -d "$SECURITY_DIR" ]]; then
+    echo -e "${YELLOW}Running security tests...${NC}"
+    for test in "$SECURITY_DIR"/test-*.sh; do
+      if [[ -x "$test" ]]; then
+        run_test "$test"
+      else
+        echo -e "${YELLOW}Warning: $test is not executable, skipping${NC}"
+      fi
+    done
+  fi
+}
+
+# Run all stress tests
+run_stress_tests() {
+  if [[ -d "$STRESS_DIR" ]]; then
+    echo -e "${YELLOW}Running stress tests...${NC}"
+    for test in "$STRESS_DIR"/test-*.sh; do
+      if [[ -x "$test" ]]; then
+        run_test "$test"
+      else
+        echo -e "${YELLOW}Warning: $test is not executable, skipping${NC}"
+      fi
+    done
+  fi
+}
+
 # Run all tests
 run_all_tests() {
   run_unit_tests
   run_integration_tests
+  run_security_tests
+  run_stress_tests
 }
 
 # Print test summary
@@ -96,9 +128,15 @@ else
     integration)
       run_integration_tests
       ;;
+    security)
+      run_security_tests
+      ;;
+    stress)
+      run_stress_tests
+      ;;
     *)
       echo "Unknown test category: $1"
-      echo "Usage: $0 [unit|integration]"
+      echo "Usage: $0 [unit|integration|security|stress]"
       exit 1
       ;;
   esac
