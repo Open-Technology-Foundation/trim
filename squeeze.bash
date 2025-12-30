@@ -42,6 +42,7 @@ squeeze() {
       echo "$REPLY"
     done
   fi
+  return 0
 }
 declare -fx squeeze
 

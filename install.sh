@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
-#
 # Install script for Bash String Trim Utilities
-#
-# This script installs the trim utilities to the system:
-# 1. Copies the script files to the installation directory (default: /usr/share/yatti/trim)
-# 2. Creates symlinks in the bin directory (default: /usr/local/bin)
-# 3. Makes all scripts executable
 
 set -euo pipefail
+shopt -s inherit_errexit shift_verbose extglob nullglob
+
+VERSION='0.9.5.420'
+SCRIPT_PATH=$(realpath -- "$0")
+SCRIPT_DIR=${SCRIPT_PATH%/*}
+SCRIPT_NAME=${SCRIPT_PATH##*/}
+readonly -- VERSION SCRIPT_PATH SCRIPT_DIR SCRIPT_NAME
 
 # Default installation directories
-declare -- INSTALL_DIR="/usr/share/yatti/trim"
-declare -- SYMLINK_DIR="/usr/local/bin"
+declare -- INSTALL_DIR=/usr/share/yatti/trim
+declare -- SYMLINK_DIR=/usr/local/bin
 
 # Script files to install
-declare -a SCRIPTS=("trim.bash" "ltrim.bash" "rtrim.bash" "trimv.bash" "trimall.bash" "squeeze.bash")
+declare -a SCRIPTS=(trim.bash ltrim.bash rtrim.bash trimv.bash trimall.bash squeeze.bash)
+
+# Runtime flags
+declare -i NO_SYMLINKS=0
+declare -i UNINSTALL=0
 
 # Display help message
 show_help() {
@@ -26,11 +31,12 @@ Usage:
   sudo ./install.sh [options]
 
 Options:
-  -h, --help            Show this help message
   -d, --dir DIR         Set installation directory (default: $INSTALL_DIR)
   -s, --symlink DIR     Set symlink directory (default: $SYMLINK_DIR)
   --no-symlinks         Don't create symlinks
   --uninstall           Remove previously installed files and symlinks
+  -h, --help            Show this help message
+  -V, --version         Show version information
 
 Example:
   sudo ./install.sh                   # Standard installation
@@ -38,49 +44,16 @@ Example:
   sudo ./install.sh --uninstall       # Remove installation
 
 EOF
-  exit 0
 }
-
-# Parse command line arguments
-declare -i NO_SYMLINKS=0
-declare -i UNINSTALL=0
-
-while (($#)); do
-  case $1 in
-    -h|--help)
-      show_help
-      ;;
-    -d|--dir)
-      INSTALL_DIR="$2"
-      shift 2
-      ;;
-    -s|--symlink)
-      SYMLINK_DIR="$2"
-      shift 2
-      ;;
-    --no-symlinks)
-      NO_SYMLINKS=1
-      shift
-      ;;
-    --uninstall)
-      UNINSTALL=1
-      shift
-      ;;
-    *)
-      >&2 echo "Error: Unknown option: $1"
-      >&2 echo "Try './install.sh --help' for more information."
-      exit 22
-      ;;
-  esac
-done
 
 # Check if running as root (needed for system dirs)
 check_root() {
+  #shellcheck disable=SC2015
   ((EUID)) && {
     >&2 echo "Error: This script must be run as root to install to system directories."
-    >&2 echo "$(basename -- "$0") --help"
+    >&2 echo "$SCRIPT_NAME --help"
     exit 1
-  }
+  } ||:
   return 0
 }
 
@@ -107,7 +80,6 @@ uninstall() {
   fi
   
   echo "Uninstall complete!"
-  exit 0
 }
 
 # Main installation function
@@ -123,9 +95,9 @@ install() {
   # Copy files to installation directory
   echo "Installing trim utilities to $INSTALL_DIR..."
   for script in "${SCRIPTS[@]}"; do
-    if [[ -f "$script" ]]; then
+    if [[ -f "$SCRIPT_DIR/$script" ]]; then
       echo "Installing: $script"
-      cp "$script" "$INSTALL_DIR/"
+      cp "$SCRIPT_DIR/$script" "$INSTALL_DIR/"
       chmod +x "$INSTALL_DIR/$script"
     else
       >&2 echo "Warning: Script not found: $script"
@@ -176,17 +148,56 @@ install() {
   echo "Installation complete!"
 }
 
-# Check if running as root for standard system paths
-if [[ "$INSTALL_DIR" == "/usr/share/yatti/trim" || "$SYMLINK_DIR" == "/usr/local/bin" ]]; then
-  check_root
-fi
+# Main entry point
+main() {
+  # Parse command line arguments
+  while (($#)); do
+    case $1 in
+    -h|--help)
+      show_help
+      return 0
+      ;;
+    -V|--version)
+      echo "$SCRIPT_NAME $VERSION"
+      return 0
+      ;;
+    -d|--dir)
+      INSTALL_DIR=$2
+      shift
+      ;;
+    -s|--symlink)
+      SYMLINK_DIR=$2
+      shift
+      ;;
+    --no-symlinks)
+      NO_SYMLINKS=1
+      ;;
+    --uninstall)
+      UNINSTALL=1
+      ;;
+    *)
+      >&2 echo "Error: Unknown option ${1@Q}. Try: $SCRIPT_NAME --help"
+      exit 22
+      ;;
+    esac
+    shift
+  done
 
-# Uninstall if requested
-if [[ $UNINSTALL -eq 1 ]]; then
-  uninstall
-fi
+  # Check if running as root for standard system paths
+  if [[ "$INSTALL_DIR" == /usr/share/yatti/trim || "$SYMLINK_DIR" == /usr/local/bin ]]; then
+    check_root
+  fi
 
-# Perform installation
-install
+  # Uninstall if requested
+  if ((UNINSTALL)); then
+    uninstall
+    return 0
+  fi
+
+  # Perform installation
+  install
+}
+
+main "$@"
 
 #fin
