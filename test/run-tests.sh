@@ -25,21 +25,22 @@ declare -i failed_tests=0
 
 # Function to run a test script
 run_test() {
-  local test_script="$1"
-  local test_name="$(basename "$test_script" .sh)"
-  
+  local -- test_script="$1"
+  local -- test_name
+  test_name="$(basename "$test_script" .sh)"
+
   echo -e "${YELLOW}Running $test_name...${NC}"
-  
+
   # Run the test script and capture output and exit code
   if "$test_script"; then
-    ((passed_tests+=1))
+    ((++passed_tests))
     echo -e "${GREEN}✓ $test_name passed${NC}"
   else
-    ((failed_tests+=1))
+    ((++failed_tests))
     echo -e "${RED}✗ $test_name failed${NC}"
   fi
 
-  ((total_tests+=1))
+  ((++total_tests))
   echo ""
 }
 

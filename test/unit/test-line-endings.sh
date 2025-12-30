@@ -18,9 +18,9 @@ done
 
 # Test Unix LF line endings (baseline)
 test_unix_lf() {
-  local input=$'  line1  \n  line2  \n'
-  local expected=$'line1\nline2'
-  local actual
+  local -- input=$'  line1  \n  line2  \n'
+  local -- expected=$'line1\nline2'
+  local -- actual
   actual=$(printf '%s' "$input" | "$TRIM")
 
   assert_equals "$actual" "$expected" "Unix LF line endings preserved"
@@ -29,10 +29,10 @@ test_unix_lf() {
 # Test Windows CRLF - carriage return should NOT be trimmed
 # [:blank:] only matches space and tab, not \r
 test_windows_crlf_preserved() {
-  local input=$'  line1  \r\n  line2  \r\n'
+  local -- input=$'  line1  \r\n  line2  \r\n'
   # \r should be preserved since [:blank:] doesn't include it
-  local expected=$'line1  \r\nline2  \r'
-  local actual
+  local -- expected=$'line1  \r\nline2  \r'
+  local -- actual
   actual=$(printf '%s' "$input" | "$TRIM")
 
   assert_equals "$actual" "$expected" "CRLF: carriage return preserved (not in [:blank:])"
@@ -40,9 +40,9 @@ test_windows_crlf_preserved() {
 
 # Test that \r at end of line is preserved by trim
 test_cr_not_trimmed() {
-  local input=$'  hello\r  '
-  local expected=$'hello\r'
-  local actual
+  local -- input=$'  hello\r  '
+  local -- expected=$'hello\r'
+  local -- actual
   actual=$("$TRIM" "$input")
 
   assert_equals "$actual" "$expected" "Carriage return at end preserved"
@@ -50,10 +50,10 @@ test_cr_not_trimmed() {
 
 # Test Mac Classic CR-only line endings
 test_mac_cr_only() {
-  local input=$'  line1  \r  line2  '
+  local -- input=$'  line1  \r  line2  '
   # CR is not a line separator for read, so this is one line
-  local expected=$'line1  \r  line2'
-  local actual
+  local -- expected=$'line1  \r  line2'
+  local -- actual
   actual=$("$TRIM" "$input")
 
   assert_equals "$actual" "$expected" "CR-only: treated as single line with embedded CR"
@@ -61,13 +61,13 @@ test_mac_cr_only() {
 
 # Test file without trailing newline
 test_no_trailing_newline() {
-  local tmp_file
+  local -- tmp_file
   tmp_file=$(mktemp)
   # Write without trailing newline
   printf '  line1  \n  line2  ' > "$tmp_file"
 
-  local expected=$'line1\nline2'
-  local actual
+  local -- expected=$'line1\nline2'
+  local -- actual
   actual=$("$TRIM" < "$tmp_file")
 
   rm -f "$tmp_file"
@@ -76,13 +76,13 @@ test_no_trailing_newline() {
 
 # Test mixed line endings in single file
 test_mixed_line_endings() {
-  local tmp_file
+  local -- tmp_file
   tmp_file=$(mktemp)
   # Mix of LF, CRLF, and CR
   printf '  unix  \n  windows  \r\n  mac  \r  end  ' > "$tmp_file"
 
   # Each line should be trimmed, but \r preserved where it appears
-  local actual
+  local -- actual
   actual=$("$TRIM" < "$tmp_file")
 
   # The file has: "  unix  \n  windows  \r\n  mac  \r  end  "
@@ -100,9 +100,9 @@ test_mixed_line_endings() {
 
 # Test ltrim preserves trailing \r
 test_ltrim_preserves_cr() {
-  local input=$'  hello\r  '
-  local expected=$'hello\r  '
-  local actual
+  local -- input=$'  hello\r  '
+  local -- expected=$'hello\r  '
+  local -- actual
   actual=$("$LTRIM" "$input")
 
   assert_equals "$actual" "$expected" "ltrim preserves trailing CR and spaces"
@@ -110,10 +110,10 @@ test_ltrim_preserves_cr() {
 
 # Test rtrim preserves leading content, strips trailing spaces but not \r
 test_rtrim_with_cr() {
-  local input=$'  hello\r  '
+  local -- input=$'  hello\r  '
   # rtrim should strip trailing spaces but \r is not in [:blank:]
-  local expected=$'  hello\r'
-  local actual
+  local -- expected=$'  hello\r'
+  local -- actual
   actual=$("$RTRIM" "$input")
 
   assert_equals "$actual" "$expected" "rtrim strips spaces after CR"
@@ -121,9 +121,9 @@ test_rtrim_with_cr() {
 
 # Test empty lines with different endings
 test_empty_lines_preserved() {
-  local input=$'  line1  \n\n  line2  '
-  local expected=$'line1\n\nline2'
-  local actual
+  local -- input=$'  line1  \n\n  line2  '
+  local -- expected=$'line1\n\nline2'
+  local -- actual
   actual=$(printf '%s' "$input" | "$TRIM")
 
   assert_equals "$actual" "$expected" "Empty lines in middle preserved"
@@ -132,10 +132,10 @@ test_empty_lines_preserved() {
 # Test stdin with only newlines
 # Note: Empty lines (only whitespace) get trimmed to empty strings
 test_only_newlines() {
-  local input=$'\n\n\n'
+  local -- input=$'\n\n\n'
   # Each line is empty, trim outputs empty string for each
-  local expected=$'\n\n'
-  local actual
+  local -- expected=$'\n\n'
+  local -- actual
   actual=$(printf '%s' "$input" | "$TRIM")
 
   # Empty input lines result in empty output lines

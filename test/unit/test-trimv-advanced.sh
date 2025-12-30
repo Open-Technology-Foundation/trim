@@ -44,7 +44,7 @@ test_empty_n_defaults() {
 
 # Test overwriting existing variable
 test_overwrite_variable() {
-  local MYVAR="original"
+  local -- MYVAR="original"
   trimv -n MYVAR "  replaced  "
 
   if [[ "$MYVAR" == "replaced" ]]; then
@@ -59,8 +59,8 @@ test_overwrite_variable() {
 # Test underscore-only variable names
 # Note: Single underscore _ is special in Bash, so we test __ and ___
 test_underscore_names() {
-  local __=""
-  local ___=""
+  local -- __=""
+  local -- ___=""
 
   trimv -n __ "  two  "
   trimv -n ___ "  three  "
@@ -76,8 +76,8 @@ test_underscore_names() {
 
 # Test variable name with numbers
 test_varname_with_numbers() {
-  local var123=""
-  local _123var=""
+  local -- var123=""
+  local -- _123var=""
 
   trimv -n var123 "  num1  "
   trimv -n _123var "  num2  "
@@ -93,7 +93,7 @@ test_varname_with_numbers() {
 
 # Test -e flag with -n flag combined
 test_e_and_n_combined() {
-  local RESULT=""
+  local -- RESULT=""
   trimv -e -n RESULT '\t  hello  \t'
 
   if [[ "$RESULT" == "hello" ]]; then
@@ -107,7 +107,7 @@ test_e_and_n_combined() {
 
 # Test trimv output mode (no -n flag)
 test_output_mode() {
-  local result
+  local -- result
   result=$(trimv "  output mode  ")
 
   if [[ "$result" == "output mode" ]]; then
@@ -121,7 +121,7 @@ test_output_mode() {
 
 # Test stdin with -n flag using here-string (avoids subshell issue)
 test_stdin_with_n() {
-  local STDIN_RESULT=""
+  local -- STDIN_RESULT=""
   trimv -n STDIN_RESULT <<< "  from stdin  "
 
   if [[ "$STDIN_RESULT" == "from stdin" ]]; then
@@ -135,13 +135,13 @@ test_stdin_with_n() {
 
 # Test multiline stdin with -n using here-doc
 test_multiline_stdin_n() {
-  local MULTI=""
+  local -- MULTI=""
   trimv -n MULTI <<EOF
   line1
   line2
 EOF
 
-  local expected=$'line1\nline2'
+  local -- expected=$'line1\nline2'
   if [[ "$MULTI" == "$expected" ]]; then
     echo -e "${GREEN}Test passed${NC}: Multiline stdin with -n"
     ((++passed))
@@ -153,7 +153,7 @@ EOF
 
 # Test preserving internal whitespace
 test_internal_whitespace() {
-  local RESULT=""
+  local -- RESULT=""
   trimv -n RESULT "  hello   world  "
 
   if [[ "$RESULT" == "hello   world" ]]; then
@@ -167,7 +167,7 @@ test_internal_whitespace() {
 
 # Test empty input
 test_empty_input() {
-  local RESULT="nonempty"
+  local -- RESULT="nonempty"
   trimv -n RESULT ""
 
   if [[ -z "$RESULT" ]]; then
@@ -181,7 +181,7 @@ test_empty_input() {
 
 # Test whitespace-only input
 test_whitespace_only() {
-  local RESULT="nonempty"
+  local -- RESULT="nonempty"
   trimv -n RESULT "     "
 
   if [[ -z "$RESULT" ]]; then
