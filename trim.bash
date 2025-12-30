@@ -40,7 +40,7 @@ declare -fx trim
 set -euo pipefail
 shopt -s inherit_errexit shift_verbose extglob nullglob
 
-declare -- VERSION='1.0.0' SCRIPT_NAME=trim.bash
+declare -- VERSION='0.9.5.420' SCRIPT_NAME=trim.bash
 
 if (($#)); then
   case $1 in
